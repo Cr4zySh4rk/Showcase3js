@@ -79,23 +79,23 @@
 }
 
 .rotation-controls {
+    margin-top: 10px;
     display: flex;
     flex-direction: column;
+    gap: 6px;
     align-items: center;
-    margin-top: 10px;
 }
 
-.rotate-side-buttons {
+.rotate-group {
     display: flex;
     gap: 10px;
-    margin: 5px 0;
 }
 
 .rotate-btn {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
-    font-size: 16px;
-    padding: 4px 8px;
+    font-size: 13px;
+    padding: 5px 10px;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.2s ease;

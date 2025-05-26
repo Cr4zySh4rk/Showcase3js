@@ -119,42 +119,41 @@ function addRotationControls(panel, exhibit) {
     controls.className = 'rotation-controls';
 
     controls.innerHTML = `
-        <button class="rotate-btn up">↑</button>
-        <div class="rotate-side-buttons">
-            <button class="rotate-btn left">←</button>
-            <button class="rotate-btn right">→</button>
+        <div class="rotate-group">
+            <button class="rotate-btn" data-axis="x" data-dir="1">X+</button>
+            <button class="rotate-btn" data-axis="x" data-dir="-1">X-</button>
         </div>
-        <button class="rotate-btn down">↓</button>
+        <div class="rotate-group">
+            <button class="rotate-btn" data-axis="y" data-dir="1">Y+</button>
+            <button class="rotate-btn" data-axis="y" data-dir="-1">Y-</button>
+        </div>
+        <div class="rotate-group">
+            <button class="rotate-btn" data-axis="z" data-dir="1">Z+</button>
+            <button class="rotate-btn" data-axis="z" data-dir="-1">Z-</button>
+        </div>
     `;
 
     panel.appendChild(controls);
 
-    const rotationSpeed = 0.02; // radians per frame
-    const activeRotation = { x: 0, y: 0 };
+    const rotationSpeed = 0.02;
+    const activeRotation = { x: 0, y: 0, z: 0 };
 
-    // Start/stop rotation on hold
     const setupHoldListener = (btn, axis, dir) => {
-        btn.addEventListener('mousedown', () => {
-            activeRotation[axis] = dir * rotationSpeed;
-        });
-        btn.addEventListener('mouseup', () => {
-            activeRotation[axis] = 0;
-        });
-        btn.addEventListener('mouseleave', () => {
-            activeRotation[axis] = 0;
-        });
-        btn.addEventListener('touchstart', () => {
-            activeRotation[axis] = dir * rotationSpeed;
-        });
-        btn.addEventListener('touchend', () => {
-            activeRotation[axis] = 0;
-        });
+        const apply = () => activeRotation[axis] = dir * rotationSpeed;
+        const clear = () => activeRotation[axis] = 0;
+
+        btn.addEventListener('mousedown', apply);
+        btn.addEventListener('mouseup', clear);
+        btn.addEventListener('mouseleave', clear);
+        btn.addEventListener('touchstart', apply);
+        btn.addEventListener('touchend', clear);
     };
 
-    setupHoldListener(controls.querySelector('.up'), 'x', -1);
-    setupHoldListener(controls.querySelector('.down'), 'x', 1);
-    setupHoldListener(controls.querySelector('.left'), 'y', -1);
-    setupHoldListener(controls.querySelector('.right'), 'y', 1);
+    controls.querySelectorAll('.rotate-btn').forEach(btn => {
+        const axis = btn.dataset.axis;
+        const dir = parseFloat(btn.dataset.dir);
+        setupHoldListener(btn, axis, dir);
+    });
 
     exhibit.rotationControl = activeRotation;
 }
@@ -557,6 +556,7 @@ function animate() {
         if (!exhibit.rotationControl || !exhibit.mesh) return;
         exhibit.mesh.rotation.x += exhibit.rotationControl.x;
         exhibit.mesh.rotation.y += exhibit.rotationControl.y;
+        exhibit.mesh.rotation.z += exhibit.rotationControl.z;
     });
 
     // Update exhibit panels
