@@ -114,6 +114,36 @@ const exhibitData = [
     }
 ];
 
+function addRotationControls(panel, exhibit) {
+    const controls = document.createElement('div');
+    controls.className = 'rotation-controls';
+
+    controls.innerHTML = `
+        <button class="rotate-btn up">↑</button>
+        <div class="rotate-side-buttons">
+            <button class="rotate-btn left">←</button>
+            <button class="rotate-btn right">→</button>
+        </div>
+        <button class="rotate-btn down">↓</button>
+    `;
+
+    panel.appendChild(controls);
+
+    const rotateStep = 0.1;
+    controls.querySelector('.up').addEventListener('click', () => {
+        exhibit.mesh.rotation.x -= rotateStep;
+    });
+    controls.querySelector('.down').addEventListener('click', () => {
+        exhibit.mesh.rotation.x += rotateStep;
+    });
+    controls.querySelector('.left').addEventListener('click', () => {
+        exhibit.mesh.rotation.y -= rotateStep;
+    });
+    controls.querySelector('.right').addEventListener('click', () => {
+        exhibit.mesh.rotation.y += rotateStep;
+    });
+}
+
 // Initialize the scene
 function init() {
     // Create scene
@@ -352,7 +382,9 @@ function createExhibitPanel(exhibit) {
             : 'Show Description ▼';
     });
 
-    exhibit.panel = panel; // <<< Save directly on exhibit object
+    addRotationControls(panel, exhibit); // ✅ Add the controls
+
+    exhibit.panel = panel;
 }
 
 
