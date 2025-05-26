@@ -524,7 +524,7 @@ document.addEventListener('keyup', (e) => {
 function addInstructions() {
     const instructions = document.createElement('div');
     instructions.className = 'instructions';
-    instructions.textContent = 'Scroll to move • Click and drag to look around';
+    instructions.textContent = 'WASD to move • Click and drag to look around';
     document.body.appendChild(instructions);
     
     // Hide after 5 seconds
