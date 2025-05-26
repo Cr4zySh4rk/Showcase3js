@@ -129,19 +129,34 @@ function addRotationControls(panel, exhibit) {
 
     panel.appendChild(controls);
 
-    const rotateStep = 0.1;
-    controls.querySelector('.up').addEventListener('click', () => {
-        exhibit.mesh.rotation.x -= rotateStep;
-    });
-    controls.querySelector('.down').addEventListener('click', () => {
-        exhibit.mesh.rotation.x += rotateStep;
-    });
-    controls.querySelector('.left').addEventListener('click', () => {
-        exhibit.mesh.rotation.y -= rotateStep;
-    });
-    controls.querySelector('.right').addEventListener('click', () => {
-        exhibit.mesh.rotation.y += rotateStep;
-    });
+    const rotationSpeed = 0.02; // radians per frame
+    const activeRotation = { x: 0, y: 0 };
+
+    // Start/stop rotation on hold
+    const setupHoldListener = (btn, axis, dir) => {
+        btn.addEventListener('mousedown', () => {
+            activeRotation[axis] = dir * rotationSpeed;
+        });
+        btn.addEventListener('mouseup', () => {
+            activeRotation[axis] = 0;
+        });
+        btn.addEventListener('mouseleave', () => {
+            activeRotation[axis] = 0;
+        });
+        btn.addEventListener('touchstart', () => {
+            activeRotation[axis] = dir * rotationSpeed;
+        });
+        btn.addEventListener('touchend', () => {
+            activeRotation[axis] = 0;
+        });
+    };
+
+    setupHoldListener(controls.querySelector('.up'), 'x', -1);
+    setupHoldListener(controls.querySelector('.down'), 'x', 1);
+    setupHoldListener(controls.querySelector('.left'), 'y', -1);
+    setupHoldListener(controls.querySelector('.right'), 'y', 1);
+
+    exhibit.rotationControl = activeRotation;
 }
 
 // Initialize the scene
@@ -532,14 +547,21 @@ function addInstructions() {
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    
+
     // Smooth movement
     currentPosition.lerp(targetPosition, 0.1);
     camera.position.copy(currentPosition);
-    
+
+    // Apply continuous rotation for held buttons
+    exhibits.forEach(exhibit => {
+        if (!exhibit.rotationControl || !exhibit.mesh) return;
+        exhibit.mesh.rotation.x += exhibit.rotationControl.x;
+        exhibit.mesh.rotation.y += exhibit.rotationControl.y;
+    });
+
     // Update exhibit panels
     updateExhibitPanels();
-    
+
     renderer.render(scene, camera);
 }
 
