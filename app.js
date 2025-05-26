@@ -8,6 +8,10 @@ let previousMouseX = 0;
 let scrollSpeed = 0.5;
 let loadingManager;
 let loadingScreen = document.getElementById('loadingScreen');
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
 
 // Museum configuration
 const museumConfig = {
@@ -462,49 +466,38 @@ function setupEventListeners() {
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
     
-    // Mouse drag to look around (only rotate camera now)
+// Horizontal mouse look (Y-axis only)
     document.addEventListener('mousedown', (e) => {
         isDragging = true;
         previousMouseX = e.clientX;
     });
-    
+
     document.addEventListener('mouseup', () => {
         isDragging = false;
     });
-    
+
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        
         const deltaX = e.clientX - previousMouseX;
         previousMouseX = e.clientX;
-        
-        // Rotate only the camera around Y axis
         camera.rotation.y -= deltaX * 0.005;
     });
-    
-    // Mouse wheel to move forward/backward
-    document.addEventListener('wheel', (e) => {
-    e.preventDefault();
 
-    const direction = new THREE.Vector3(0, 0, -1);
-    direction.applyEuler(camera.rotation).normalize();
-    direction.y = 0;
-    direction.multiplyScalar(e.deltaY * scrollSpeed * 0.01);
-    targetPosition.add(direction);
-
-    // Clamp all axes
-    const minX = -museumConfig.width / 2 + 3;  // avoid crossing left wall
-    const maxX = museumConfig.width / 2 - 5;   // avoid crossing right wall
-    const minY = 1.4;                            // keep camera above ground
-    const maxY = 2.0;
-    const minZ = -museumConfig.length + 15 ;       // near back wall
-    const maxZ = 5;                              // entrance
-
-    targetPosition.x = Math.max(minX, Math.min(maxX, targetPosition.x));
-    targetPosition.y = Math.max(minY, Math.min(maxY, targetPosition.y));
-    targetPosition.z = Math.max(minZ, Math.min(maxZ, targetPosition.z));
-
+    // Keyboard movement
+    document.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyW') moveForward = true;
+    if (e.code === 'KeyS') moveBackward = true;
+    if (e.code === 'KeyA') moveLeft = true;
+    if (e.code === 'KeyD') moveRight = true;
 });
+
+document.addEventListener('keyup', (e) => {
+    if (e.code === 'KeyW') moveForward = false;
+    if (e.code === 'KeyS') moveBackward = false;
+    if (e.code === 'KeyA') moveLeft = false;
+    if (e.code === 'KeyD') moveRight = false;
+});
+
     
     // Touch events for mobile
     document.addEventListener('touchstart', (e) => {
@@ -547,11 +540,35 @@ function addInstructions() {
 function animate() {
     requestAnimationFrame(animate);
 
-    // Smooth movement
+    // Movement handling
+    const direction = new THREE.Vector3();
+    const speed = 0.1;
+
+    if (moveForward) direction.z -= 1;
+    if (moveBackward) direction.z += 1;
+    if (moveLeft) direction.x -= 1;
+    if (moveRight) direction.x += 1;
+
+    direction.normalize();
+    direction.applyEuler(new THREE.Euler(0, camera.rotation.y, 0)); // use Y rotation only
+    targetPosition.add(direction.multiplyScalar(speed));
+
+    // Clamp movement within museum
+    const minX = -museumConfig.width / 2 + 3;
+    const maxX = museumConfig.width / 2 - 5;
+    const minY = 1.4;
+    const maxY = 2.0;
+    const minZ = -museumConfig.length + 15;
+    const maxZ = 5;
+
+    targetPosition.x = Math.max(minX, Math.min(maxX, targetPosition.x));
+    targetPosition.y = Math.max(minY, Math.min(maxY, targetPosition.y));
+    targetPosition.z = Math.max(minZ, Math.min(maxZ, targetPosition.z));
+
     currentPosition.lerp(targetPosition, 0.1);
     camera.position.copy(currentPosition);
 
-    // Apply continuous rotation for held buttons
+    // Rotate models continuously if buttons held
     exhibits.forEach(exhibit => {
         if (!exhibit.rotationControl || !exhibit.mesh) return;
         exhibit.mesh.rotation.x += exhibit.rotationControl.x;
@@ -559,9 +576,7 @@ function animate() {
         exhibit.mesh.rotation.z += exhibit.rotationControl.z;
     });
 
-    // Update exhibit panels
     updateExhibitPanels();
-
     renderer.render(scene, camera);
 }
 
